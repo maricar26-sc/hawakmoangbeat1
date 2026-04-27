@@ -405,3 +405,75 @@ function drawPieChart() {
     options:{ responsive:true, plugins:{legend:{position:'right',labels:{color:'#6b748f',font:{family:"Courier Prime",size:10},boxWidth:12}}} }
   });
 }
+
+/* ══════════════════════════════════════════
+   STUDENT 3 — STATISTICAL ANALYSIS
+══════════════════════════════════════════ */
+function mean(arr)     { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function median(arr)   { const s=[...arr].sort((a,b)=>a-b),n=s.length; return n%2===0?(s[n/2-1]+s[n/2])/2:s[Math.floor(n/2)]; }
+function variance(arr) { const m=mean(arr); return arr.reduce((a,b)=>a+Math.pow(b-m,2),0)/arr.length; }
+function stdDev(arr)   { return Math.sqrt(variance(arr)); }
+function pearsonCorr(x,y) {
+  const mx=mean(x),my=mean(y);
+  const num=x.reduce((a,v,i)=>a+(v-mx)*(y[i]-my),0);
+  const den=Math.sqrt(x.reduce((a,v)=>a+Math.pow(v-mx,2),0)*y.reduce((a,v)=>a+Math.pow(v-my,2),0));
+  return den===0?0:num/den;
+}
+function linearRegression(x,y) {
+  const mx=mean(x),my=mean(y);
+  const m=x.reduce((a,v,i)=>a+(v-mx)*(y[i]-my),0)/x.reduce((a,v)=>a+Math.pow(v-mx,2),0);
+  return {m, b:my-m*mx};
+}
+
+function renderStats() {
+  const data=filteredData;
+  if(!data.length) return;
+  const subs=data.map(d=>d.subscribers), views=data.map(d=>d.views);
+  const m=mean(subs), med=median(subs), v=variance(subs), sd=stdDev(subs);
+  const mn=Math.min(...subs), mx=Math.max(...subs);
+  const cc={};
+  data.forEach(d=>cc[d.country]=(cc[d.country]||0)+1);
+  const topC=Object.entries(cc).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('statMean').textContent   = fmtShort(m);
+  document.getElementById('statMedian').textContent = fmtShort(med);
+  document.getElementById('statStdDev').textContent = "±"+fmtShort(sd);
+  document.getElementById('statMode').textContent   = topC[0];
+  document.getElementById('dCount').textContent     = data.length.toLocaleString();
+  document.getElementById('dMin').textContent       = fmt(mn);
+  document.getElementById('dMax').textContent       = fmt(mx);
+  document.getElementById('dRange').textContent     = fmt(mx-mn);
+  document.getElementById('dVariance').textContent  = fmtShort(v);
+  document.getElementById('dStdDev').textContent    = fmtShort(sd);
+  const r=pearsonCorr(subs,views);
+  const {m:slope,b:intercept}=linearRegression(subs,views);
+  let interp=Math.abs(r)>=0.7?'Strong':Math.abs(r)>=0.4?'Moderate':'Weak';
+  interp+=r>=0?' Positive':' Negative';
+  document.getElementById('rPearson').textContent   = r.toFixed(4);
+  document.getElementById('rInterp').textContent    = interp;
+  document.getElementById('rSlope').textContent     = slope.toFixed(4);
+  document.getElementById('rIntercept').textContent = fmtShort(intercept);
+  document.getElementById('rSquared').textContent   = (r*r).toFixed(4);
+  document.getElementById('rEquation').textContent  = y = ${slope.toFixed(2)}x + ${fmtShort(intercept)};
+}
+
+/* ─── HELPERS ─── */
+function fmt(n)      { return Number(n).toLocaleString(); }
+function fmtShort(n) {
+  if(n>=1e12) return (n/1e12).toFixed(2)+"T";
+  if(n>=1e9)  return (n/1e9).toFixed(2)+"B";
+  if(n>=1e6)  return (n/1e6).toFixed(2)+"M";
+  if(n>=1e3)  return (n/1e3).toFixed(1)+"K";
+  return Number(n).toFixed(0);
+}
+function escHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ─── LIVE SEARCH ─── */
+document.getElementById('filterInput').addEventListener('input', applyFilterSort);
+document.getElementById('filterCountry').addEventListener('change', applyFilterSort);
+document.getElementById('sortSelect').addEventListener('change', applyFilterSort);
+
+/* ─── INIT ─── */
+loadDataset();
+</script>
+</body>
+</html>ß
