@@ -344,4 +344,64 @@ function updateKPIs() {
   document.getElementById('kpiViews').textContent     = fmtShort(totalViews);
   document.getElementById('kpiCountries').textContent = [...new Set(data.map(d=>d.country))].length;
   document.getElementById('kpiAvgSub').textContent    = fmtShort(totalSubs/data.length);
+} /* ══════════════════════════════════════════
+   STUDENT 2 — VISUALIZATIONS
+══════════════════════════════════════════ */
+const CHART_COLORS = ['#f0b429','#3ecfcf','#e05c6a','#9b8cff','#56d364','#ff9f40','#4bc0c0','#ff6384','#c9cbcf','#36a2eb'];
+
+function csd() {
+  return { ticks:{color:'#6b748f',font:{family:'Courier Prime',size:10}}, grid:{color:'rgba(42,47,69,0.😎'} };
+}
+
+function renderCharts() { drawBarChart(); drawScatterPlot(); drawHistogram(); drawPieChart(); }
+
+function drawBarChart() {
+  if (charts.bar) charts.bar.destroy();
+  const counts = {};
+  filteredData.forEach(d=>counts[d.country]=(counts[d.country]||0)+1);
+  const top15 = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  charts.bar = new Chart(document.getElementById('barChart'), {
+    type:'bar',
+    data:{ labels:top15.map(c=>c[0]), datasets:[{label:'Channels',data:top15.map(c=>c[1]),backgroundColor:'#f0b429',borderRadius:4}] },
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{x:{...csd(),ticks:{...csd().ticks,maxRotation:45}},y:{...csd()}} }
+  });
+}
+
+function drawScatterPlot() {
+  if (charts.scatter) charts.scatter.destroy();
+  const top200 = filteredData.slice(0,200).map(d=>({x:d.subscribers/1e6,y:d.views/1e9}));
+  charts.scatter = new Chart(document.getElementById('scatterChart'), {
+    type:'scatter',
+    data:{ datasets:[{label:'Channels',data:top200,backgroundColor:'rgba(62,207,207,0.55)',pointRadius:5}] },
+    options:{ responsive:true, plugins:{legend:{display:false}},
+      scales:{x:{...csd(),title:{display:true,text:'Subscribers (M)',color:'#6b748f'}},y:{...csd(),title:{display:true,text:'Views (B)',color:'#6b748f'}}} }
+  });
+}
+
+function drawHistogram() {
+  if (charts.hist) charts.hist.destroy();
+  const bins=[0,5e6,10e6,20e6,50e6,100e6,200e6,500e6];
+  const labels=['<5M','5–10M','10–20M','20–50M','50–100M','100–200M','200M+'];
+  const counts=new Array(labels.length).fill(0);
+  filteredData.forEach(d=>{
+    for(let i=0;i<bins.length-1;i++){ if(d.subscribers>=bins[i]&&d.subscribers<bins[i+1]){counts[i]++;break;} }
+    if(d.subscribers>=bins[bins.length-1]) counts[counts.length-1]++;
+  });
+  charts.hist = new Chart(document.getElementById('histChart'), {
+    type:'bar',
+    data:{ labels, datasets:[{label:'Channels',data:counts,backgroundColor:'#9b8cff',borderRadius:4}] },
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{x:{...csd()},y:{...csd()}} }
+  });
+}
+
+function drawPieChart() {
+  if (charts.pie) charts.pie.destroy();
+  const counts={};
+  filteredData.forEach(d=>counts[d.country]=(counts[d.country]||0)+1);
+  const top10=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  charts.pie = new Chart(document.getElementById('pieChart'), {
+    type:'doughnut',
+    data:{ labels:top10.map(c=>c[0]), datasets:[{data:top10.map(c=>c[1]),backgroundColor:CHART_COLORS,borderColor:'#1c2030',borderWidth:2}] },
+    options:{ responsive:true, plugins:{legend:{position:'right',labels:{color:'#6b748f',font:{family:"Courier Prime",size:10},boxWidth:12}}} }
+  });
 }
