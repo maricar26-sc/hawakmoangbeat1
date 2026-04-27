@@ -453,7 +453,7 @@ function renderStats() {
   document.getElementById('rSlope').textContent     = slope.toFixed(4);
   document.getElementById('rIntercept').textContent = fmtShort(intercept);
   document.getElementById('rSquared').textContent   = (r*r).toFixed(4);
-  document.getElementById('rEquation').textContent  = y = ${slope.toFixed(2)}x + ${fmtShort(intercept)};
+  document.getElementById('rEquation').textContent  = `y = ${slope.toFixed(2)}x + ${fmtShort(intercept)}`;
 }
 
 /* ─── HELPERS ─── */
@@ -476,4 +476,5 @@ document.getElementById('sortSelect').addEventListener('change', applyFilterSort
 loadDataset();
 </script>
 </body>
-</html>ß
+</script>
+</html>
